@@ -4,7 +4,7 @@
     import NavigatorNode from "./navigator-node.svelte";
 
     const { tree, depth }: { tree: FsNode; depth: number } = $props();
-    let expanded = $state(true);
+    let expanded = $state(false);
 
     function handleClick() {
         if (tree.is_file) {

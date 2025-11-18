@@ -2,6 +2,7 @@ import type { TagLikeNode } from "@astrojs/compiler/types";
 import * as ts from "typescript";
 import { initialize, parse } from "./astro-compiler/browser";
 import { is, walkAsync } from "./astro-compiler/browser/utils";
+import { invoke } from "@tauri-apps/api/core";
 
 function searchForSlot(node: TagLikeNode): boolean {
   if (node.name === "slot") return true;
@@ -17,11 +18,14 @@ function searchForSlot(node: TagLikeNode): boolean {
   return false;
 }
 
-export async function getComponentMetadata(
-  src: string,
-): Promise<{ acceptsChildren: boolean; props: string[] }> {
+export async function getComponentMetadata(src: string): Promise<{
+  acceptsChildren: boolean;
+  props: string[];
+  importedComponents: string[];
+}> {
   let hasSlot = false;
   let props: string[] = [];
+  let components: string[] = [];
 
   await initialize({ wasmURL: "/astro.wasm" });
 
@@ -42,11 +46,11 @@ export async function getComponentMetadata(
         true,
       );
 
-      // very fragile component props extraction, only works
-      // if props are destructured in the component
-      for (const variableStatement of sourceFile.statements) {
-        if (ts.isVariableStatement(variableStatement)) {
-          const variableDeclarationList = variableStatement.declarationList;
+      for (const statement of sourceFile.statements) {
+        // very fragile component props extraction, only works
+        // if props are destructured in the component
+        if (ts.isVariableStatement(statement)) {
+          const variableDeclarationList = statement.declarationList;
 
           for (const declaration of variableDeclarationList.declarations) {
             // only continue if we are destructing `Astro.props`
@@ -63,6 +67,19 @@ export async function getComponentMetadata(
             }
           }
         }
+
+        // also very fragile code to find imported components,
+        // i will probably improve all of this at a
+        // later date
+        if (ts.isImportDeclaration(statement)) {
+          // we only want to mark `[whatever].astro` as component imports
+          if (!ts.isStringLiteral(statement.moduleSpecifier)) return;
+          if (!statement.moduleSpecifier.text.endsWith(".astro")) return;
+
+          if (statement.importClause?.name?.getText()) {
+            components.push(statement.importClause?.name?.getText());
+          }
+        }
       }
     }
   });
@@ -70,5 +87,19 @@ export async function getComponentMetadata(
   return {
     acceptsChildren: hasSlot,
     props,
+    importedComponents: components,
   };
+}
+
+export async function getPackageName(pkgPath: string) {
+  const packageJson = (await invoke("get_file_content", {
+    path: `${pkgPath}/package.json`,
+  })) as string;
+
+  console.log(packageJson, `${pkgPath}/package.json`);
+
+  // if empty string (e.g. couldn't find file) just use path
+  if (!packageJson) return pkgPath;
+
+  return JSON.parse(packageJson).name ?? pkgPath;
 }

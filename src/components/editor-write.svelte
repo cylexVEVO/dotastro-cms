@@ -18,7 +18,6 @@
 
     $effect(() => {
         getComponentMetadata(fileContent).then((metadata) => {
-            console.log(fileContent, metadata);
             meta = metadata;
         });
     });

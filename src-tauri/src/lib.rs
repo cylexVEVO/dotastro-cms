@@ -60,9 +60,7 @@ fn get_content_tree(path: String) -> Option<FsNode> {
 fn get_file_content(path: String) -> String {
     let path = Path::new(&path);
     if path.is_file() {
-        if path.extension().map_or(false, |ext| ext == "astro") {
-            return fs::read_to_string(path).unwrap_or_default();
-        }
+        return fs::read_to_string(path).unwrap_or_default();
     }
     "".to_string()
 }

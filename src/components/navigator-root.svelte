@@ -31,6 +31,9 @@
 </script>
 
 <div>
+    <button onclick={() => ($appState.activeProject = null)}>
+        close project
+    </button>
     {#if $appState.contentTree}
         {#each $appState.contentTree.children as child}
             <NavigatorNode tree={child} depth={0} />

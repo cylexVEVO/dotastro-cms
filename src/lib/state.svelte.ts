@@ -5,7 +5,11 @@ import { writable } from "svelte/store";
 type AppState = {
   currentPath: string;
   contentTree: FsNode | null;
-  projects: string[];
+  projects: {
+    path: string;
+    // from package.json or path if unable to find
+    name: string;
+  }[];
   activeProject: string | null;
 };
 
@@ -16,7 +20,7 @@ const initialState: AppState = {
   activeProject: null,
 };
 
-const persistingKeys: [keyof AppState] = ["projects"];
+const persistingKeys: (keyof AppState)[] = ["projects", "activeProject"];
 
 function createAppState() {
   const store = writable(initialState);

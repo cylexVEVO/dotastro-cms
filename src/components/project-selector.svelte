@@ -1,30 +1,46 @@
 <script lang="ts">
+    import { getPackageName } from "$lib/parsing";
     import { appState } from "../lib/state.svelte";
     import { open } from "@tauri-apps/plugin-dialog";
+
+    async function openProject() {
+        const path = await open({
+            directory: true,
+        });
+
+        if (!path) return;
+
+        if (!$appState.projects.find((project) => project.path === path)) {
+            $appState.projects.push({
+                path,
+                name: await getPackageName(path),
+            });
+        }
+
+        $appState.activeProject = path;
+    }
 </script>
 
 <div class="layout">
     <h1>Projects</h1>
     <div class="list">
-        <button
-            onclick={async () => {
-                const path = await open({
-                    directory: true,
-                });
-
-                if (!path) return;
-
-                if (!$appState.projects.includes(path)) {
-                    $appState.projects.push(path);
-                }
-
-                $appState.activeProject = path;
-            }}>Open...</button
-        >
+        <button onclick={openProject}>Open...</button>
         {#each $appState.projects as project}
-            <button onclick={() => ($appState.activeProject = project)}
-                >{project}</button
-            >
+            <div>
+                <button onclick={() => ($appState.activeProject = project.path)}
+                    >{project.name}</button
+                >
+                <button
+                    onclick={() => {
+                        appState.update((state) => ({
+                            ...state,
+                            projects: state.projects.filter(
+                                (p) => p.path !== project.path,
+                            ),
+                        }));
+                    }}>x</button
+                >
+            </div>
         {/each}
     </div>
 </div>
