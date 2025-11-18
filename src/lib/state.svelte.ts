@@ -24,7 +24,11 @@ const initialState: AppState = {
   activeProject: null,
 };
 
-const persistingKeys: (keyof AppState)[] = ["projects", "activeProject"];
+const persistingKeys: (keyof AppState)[] = [
+  "projects",
+  "activeProject",
+  "currentPath",
+];
 
 function createAppState() {
   const store = writable(initialState);

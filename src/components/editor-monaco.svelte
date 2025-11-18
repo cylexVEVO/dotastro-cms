@@ -28,22 +28,6 @@
                 content: currentModel.getValue(),
             });
         }
-
-        // Check if Ctrl (or Cmd on Mac) + N is pressed
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "n") {
-            e.preventDefault();
-
-            console.log("bruh");
-            const path = window.prompt("file path");
-
-            // if (!path) return;
-
-            invoke("create_file", {
-                path: "/Users/cylex/Documents/cylex.dog/src/pages/new.astro",
-            }).then((qualifiedPath) => {
-                console.log(qualifiedPath);
-            });
-        }
     }
 
     function handleResize() {

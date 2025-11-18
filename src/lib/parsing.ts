@@ -3,7 +3,13 @@ import * as ts from "typescript";
 import { initialize, parse } from "./astro-compiler/browser";
 import { is, walkAsync } from "./astro-compiler/browser/utils";
 import { invoke } from "@tauri-apps/api/core";
-import type { ParseOptions, ParseResult } from "./astro-compiler/shared/types";
+import type {
+  ParseOptions,
+  ParseResult,
+  Position,
+  RootNode,
+  Node,
+} from "./astro-compiler/shared/types";
 
 function searchForSlot(node: TagLikeNode): boolean {
   if (node.name === "slot") return true;
@@ -108,4 +114,26 @@ export async function getPackageName(pkgPath: string) {
   if (!packageJson) return pkgPath;
 
   return JSON.parse(packageJson).name ?? pkgPath;
+}
+
+export function traverseToBlock(
+  ast: RootNode | TagLikeNode | null,
+  position: Position | null,
+): Node | null {
+  if (!ast) return null;
+  if (!position) return null;
+
+  for (const child of ast.children) {
+    if (child.position!.start.offset === position.start.offset) {
+      return child;
+    }
+
+    if (is.tag(child)) {
+      const block = traverseToBlock(child, position);
+
+      if (block) return block;
+    }
+  }
+
+  return null;
 }

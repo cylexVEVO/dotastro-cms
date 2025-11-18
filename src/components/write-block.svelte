@@ -1,34 +1,55 @@
 <script lang="ts">
-    import type { TagLikeNode, Node } from "$lib/astro-compiler/shared/types";
+    import type {
+        TagLikeNode,
+        Node,
+        Position,
+    } from "$lib/astro-compiler/shared/types";
     import { is } from "$lib/astro-compiler/browser/utils";
     import WriteBlock from "./write-block.svelte";
 
-    const { node, depth }: { node: Node; depth: number } = $props();
+    let {
+        node = $bindable(),
+        depth,
+        selectedBlock = $bindable(),
+    }: {
+        node: Node;
+        depth: number;
+        selectedBlock: Position | null | undefined;
+    } = $props();
 
-    $inspect(node);
+    function selectSelf() {
+        selectedBlock = node.position;
+    }
 </script>
 
 {#if is.tag(node)}
     <div
         style={`padding-left: ${depth === 0 ? "0" : "10"}px; border: 1px solid rgba(255, 255, 255, 0.2); padding: 8px; display: flex; flex-direction: column; gap: 8px;`}
     >
-        {node.name}
-        <br />
-        <div>
-            {#each node.attributes as attr}
-                <div>
-                    {attr.name}: {attr.value}
-                </div>
-            {/each}
-        </div>
-        {#each node.children as child}
-            <WriteBlock node={child} depth={depth + 1} />
+        <button
+            onclick={selectSelf}
+            style="background: unset; color: inherit; font: inherit; text-align: inherit; border: none"
+        >
+            {node.name}
+            {#if node.attributes.length}
+                <span style="opacity: .5; font-size: .8rem;"
+                    >{node.attributes.length}
+                    {node.attributes.length > 1 ? "attrs" : "attr"}</span
+                >
+            {/if}
+        </button>
+        {#each node.children as child, i}
+            <WriteBlock
+                bind:node={node.children[i]}
+                depth={depth + 1}
+                bind:selectedBlock
+            />
         {/each}
     </div>
 {/if}
 
 {#if is.text(node)}
-    {node.value}
+    <input bind:value={node.value} />
 {/if}
 
 <style>
