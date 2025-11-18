@@ -3,6 +3,7 @@
         TagLikeNode,
         Node,
         Position,
+        RootNode,
     } from "$lib/astro-compiler/shared/types";
     import { is } from "$lib/astro-compiler/browser/utils";
     import WriteBlock from "./write-block.svelte";
@@ -13,10 +14,12 @@
         node = $bindable(),
         depth,
         selectedBlock = $bindable(),
+        deleteSelf,
     }: {
         node: Node;
         depth: number;
         selectedBlock: Position | null | undefined;
+        deleteSelf: () => void;
     } = $props();
 
     let project = $derived(
@@ -40,23 +43,28 @@
     <div
         style={`padding-left: ${depth === 0 ? "0" : "10"}px; border: 1px solid rgba(255, 255, 255, 0.1); padding: 16px 8px 16px 8px; display: flex; flex-direction: column; gap: 8px; background: ${depth % 2 === 0 ? "#282824" : "rgba(0, 0, 0, 0.2)"}`}
     >
-        <button
-            onclick={selectSelf}
-            style="background: unset; color: inherit; font: inherit; text-align: inherit; border: none"
-        >
-            {node.name}
-            {#if node.attributes.length}
-                <span style="opacity: .5; font-size: .8rem;"
-                    >{node.attributes.length}
-                    {node.attributes.length > 1 ? "attrs" : "attr"}</span
-                >
-            {/if}
-        </button>
+        <div class="block-heading">
+            <button
+                onclick={selectSelf}
+                style="background: unset; color: inherit; font: inherit; text-align: inherit; border: none; flex-grow: 1;"
+            >
+                {node.name}
+                {#if node.attributes.length}
+                    <span style="opacity: .5; font-size: .8rem;"
+                        >{node.attributes.length}
+                        {node.attributes.length > 1 ? "attrs" : "attr"}</span
+                    >
+                {/if}
+            </button>
+            <button class="button" onclick={() => deleteSelf()}>x</button>
+        </div>
         {#each node.children as child, i}
             <WriteBlock
                 bind:node={node.children[i]}
                 depth={depth + 1}
                 bind:selectedBlock
+                deleteSelf={() =>
+                    (node.children = node.children.filter((c, j) => i !== j))}
             />
         {/each}
     </div>
@@ -72,4 +80,18 @@
 {/if}
 
 <style>
+    .button {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        background-color: rgba(0, 0, 0, 0.1);
+        color: inherit;
+        cursor: pointer;
+        font-size: 0.8rem;
+        display: inline;
+    }
+
+    .block-heading {
+        display: flex;
+        align-items: center;
+    }
 </style>

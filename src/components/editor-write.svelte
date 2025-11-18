@@ -14,6 +14,7 @@
     import { is } from "$lib/astro-compiler/browser/utils";
     import WriteBlock from "./write-block.svelte";
     import { astToString } from "$lib/serialize";
+    import { TagLikeNode } from "@astrojs/compiler/types";
 
     let fileContent = $state("");
     let meta = $state({});
@@ -72,13 +73,54 @@
             />
         {/each}
     </div>
-    <div>
+    <div style="padding: 8px;">
         {#if selectedBlock}
             {#if is.tag(selectedBlock)}
+                {@const definedAttrs = selectedBlock.attributes.map(
+                    (attr) => attr.name,
+                )}
+                {@const availableAttrs =
+                    project.components.find((c) =>
+                        c.absolutePath.endsWith(
+                            `${(selectedBlock as TagLikeNode).name}.astro`,
+                        ),
+                    )?.props ?? []}
+                {@const remainingAttrs = availableAttrs.filter(
+                    (attr) => !definedAttrs.includes(attr),
+                )}
                 {#each selectedBlock.attributes as attr, i}
-                    <div>
-                        {attr.name}: {attr.value}
+                    <div
+                        style="display: flex; flex-direction: column; gap: 8px;"
+                    >
+                        {attr.name}
+                        <button
+                            onclick={() =>
+                                ((selectedBlock as TagLikeNode).attributes = (
+                                    selectedBlock as TagLikeNode
+                                ).attributes.filter(
+                                    (a) => a.name !== attr.name,
+                                ))}
+                        >
+                            x
+                        </button>
+                        <textarea
+                            style="background: none; border: rgba(255, 255, 255, 0.1) 1px solid; color: inherit; font: inherit; padding: 8px; resize: vertical; height: max-content;"
+                            bind:value={selectedBlock.attributes[i].value}
+                        ></textarea>
                     </div>
+                {/each}
+                {#each remainingAttrs as attr}
+                    <button
+                        onclick={() =>
+                            (selectedBlock as TagLikeNode).attributes.push({
+                                type: "attribute",
+                                kind: "quoted",
+                                name: attr,
+                                value: "",
+                            })}
+                    >
+                        add attr `{attr}`
+                    </button>
                 {/each}
             {/if}
         {/if}
