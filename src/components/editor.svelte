@@ -1,9 +1,12 @@
 <script lang="ts">
     import * as monaco from "monaco-editor";
     import { onMount } from "svelte";
-    import { appState } from "../state.svelte";
+    import { appState } from "../lib/state.svelte";
     import { invoke } from "@tauri-apps/api/core";
-    import { astroLanguageConfig, astroLanguageDefinition } from "../monarch";
+    import {
+        astroLanguageConfig,
+        astroLanguageDefinition,
+    } from "../lib/monarch";
 
     // Register the language with Monaco
     monaco.languages.register({ id: "astro", extensions: [".astro"] });

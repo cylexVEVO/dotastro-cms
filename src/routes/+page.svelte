@@ -2,7 +2,7 @@
     import ProjectView from "../components/project-view.svelte";
     import ProjectSelector from "../components/project-selector.svelte";
 
-    import { appState } from "../state.svelte";
+    import { appState } from "../lib/state.svelte";
 </script>
 
 <main>

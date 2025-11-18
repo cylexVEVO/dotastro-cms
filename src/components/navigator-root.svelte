@@ -1,10 +1,10 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { type FsNode } from "../types";
+    import { type FsNode } from "../lib/types";
     import NavigatorNode from "./navigator-node.svelte";
     import { watchImmediate } from "@tauri-apps/plugin-fs";
     import { invoke } from "@tauri-apps/api/core";
-    import { appState } from "../state.svelte";
+    import { appState } from "../lib/state.svelte";
 
     onMount(() => {
         // load initial tree then setup watcher

@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { type FsNode } from "../types";
-    import { appState } from "../state.svelte";
+    import { type FsNode } from "../lib/types";
+    import { appState } from "../lib/state.svelte";
     import NavigatorNode from "./navigator-node.svelte";
 
     const { tree, depth }: { tree: FsNode; depth: number } = $props();

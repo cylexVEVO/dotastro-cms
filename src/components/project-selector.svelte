@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { appState } from "../state.svelte";
+    import { appState } from "../lib/state.svelte";
     import { open } from "@tauri-apps/plugin-dialog";
 </script>
 
