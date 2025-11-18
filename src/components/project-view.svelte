@@ -1,15 +1,47 @@
 <script lang="ts">
-    import Editor from "./editor.svelte";
+    import EditorMonaco from "./editor-monaco.svelte";
+    import EditorWrite from "./editor-write.svelte";
     import Navigator from "./navigator-root.svelte";
+
+    let mode: "monaco" | "write" = $state("monaco");
 </script>
 
-<div>
+<div class="layout">
     <Navigator />
-    <Editor />
+    <div class="editor-pane">
+        <div class="mode-selector">
+            <button onclick={() => (mode = "monaco")}>{"</>"}</button>
+            <button onclick={() => (mode = "write")}>Aa</button>
+        </div>
+        {#if mode === "monaco"}
+            <EditorMonaco />
+        {:else if mode === "write"}
+            <EditorWrite />
+        {/if}
+    </div>
 </div>
 
 <style>
-    div {
+    .editor-pane {
+        display: grid;
+        grid-template-rows: min-content auto;
+    }
+
+    .mode-selector {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    button {
+        padding: 0.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        background-color: rgba(0, 0, 0, 0.1);
+        color: inherit;
+        cursor: pointer;
+        font-size: 0.8rem;
+    }
+
+    .layout {
         width: 100vw;
         height: 100vh;
         display: grid;

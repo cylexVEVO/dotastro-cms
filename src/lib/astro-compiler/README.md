@@ -1,0 +1,1 @@
+due to weird issues with how astro publishes the compiler (notably the browser-compatible version) i had to bring it in locally. i might just be a dumbass, but i cannot find the `initialize` function exported anywhere in the version on npm, which is required to load the wasm binary in the browser.
