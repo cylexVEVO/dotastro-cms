@@ -1,19 +1,22 @@
 <script lang="ts">
-    import Editor from "../components/editor.svelte";
-    import Navigator from "../components/navigator-root.svelte";
+    import ProjectView from "../components/project-view.svelte";
+    import ProjectSelector from "../components/project-selector.svelte";
+
+    import { appState } from "../state.svelte";
 </script>
 
 <main>
-    <Navigator />
-    <Editor />
+    {#if $appState.activeProject}
+        <ProjectView />
+    {:else}
+        <ProjectSelector />
+    {/if}
 </main>
 
 <style>
     main {
         width: 100vw;
         height: 100vh;
-        display: grid;
-        grid-template-columns: 1fr 3fr;
     }
 
     :root {

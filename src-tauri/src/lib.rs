@@ -52,8 +52,8 @@ pub fn build_content_tree(path: impl AsRef<Path>) -> Option<FsNode> {
 }
 
 #[tauri::command]
-fn get_content_tree() -> Option<FsNode> {
-    build_content_tree("/Users/cylex/Documents/cylex.dog/src/pages")
+fn get_content_tree(path: String) -> Option<FsNode> {
+    build_content_tree(path)
 }
 
 #[tauri::command]
@@ -94,6 +94,7 @@ fn create_file(path: String) -> Result<(), String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())

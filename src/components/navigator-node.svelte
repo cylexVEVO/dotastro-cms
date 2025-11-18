@@ -8,7 +8,7 @@
 
     function handleClick() {
         if (tree.is_file) {
-            appState.currentPath = tree.path;
+            $appState.currentPath = tree.path;
         }
     }
 </script>

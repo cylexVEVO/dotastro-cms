@@ -4,19 +4,21 @@
     import NavigatorNode from "./navigator-node.svelte";
     import { watchImmediate } from "@tauri-apps/plugin-fs";
     import { invoke } from "@tauri-apps/api/core";
-    import { appState as state } from "../state.svelte";
+    import { appState } from "../state.svelte";
 
     onMount(() => {
         // load initial tree then setup watcher
-        invoke("get_content_tree").then((tree) => {
-            state.contentTree = tree as FsNode | null;
-        });
+        invoke("get_content_tree", { path: $appState.activeProject! }).then(
+            (tree) => {
+                $appState.contentTree = tree as FsNode | null;
+            },
+        );
 
         watchImmediate(
-            "/Users/cylex/Documents/cylex.dog/src/pages",
+            $appState.activeProject!,
             () => {
                 invoke("get_content_tree").then((tree) => {
-                    state.contentTree = tree as FsNode | null;
+                    $appState.contentTree = tree as FsNode | null;
                 });
             },
             {
@@ -29,8 +31,8 @@
 </script>
 
 <div>
-    {#if state.contentTree}
-        {#each state.contentTree.children as child}
+    {#if $appState.contentTree}
+        {#each $appState.contentTree.children as child}
             <NavigatorNode tree={child} depth={0} />
         {/each}
     {/if}

@@ -21,7 +21,7 @@
             if (!currentModel) return;
 
             invoke("save_file_content", {
-                path: appState.currentPath,
+                path: $appState.currentPath,
                 content: currentModel.getValue(),
             });
         }
@@ -58,7 +58,7 @@
 
         $effect(() => {
             let newModel = monaco.editor.getModel(
-                monaco.Uri.parse(`inmemory://${appState.currentPath}`),
+                monaco.Uri.parse(`inmemory://${$appState.currentPath}`),
             );
 
             if (newModel) {
@@ -67,12 +67,12 @@
                 editor?.setModel(currentModel);
             } else {
                 invoke("get_file_content", {
-                    path: appState.currentPath,
+                    path: $appState.currentPath,
                 }).then((content) => {
                     newModel = monaco.editor.createModel(
                         content as string,
                         "astro",
-                        monaco.Uri.parse(`inmemory://${appState.currentPath}`),
+                        monaco.Uri.parse(`inmemory://${$appState.currentPath}`),
                     );
 
                     currentModel = newModel;
