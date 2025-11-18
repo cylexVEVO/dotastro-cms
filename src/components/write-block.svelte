@@ -6,6 +6,8 @@
     } from "$lib/astro-compiler/shared/types";
     import { is } from "$lib/astro-compiler/browser/utils";
     import WriteBlock from "./write-block.svelte";
+    import { appState } from "$lib/state.svelte";
+    import { textTags } from "$lib/types";
 
     let {
         node = $bindable(),
@@ -17,6 +19,18 @@
         selectedBlock: Position | null | undefined;
     } = $props();
 
+    let project = $derived(
+        $appState.projects.find((p) => p.path === $appState.activeProject)!,
+    );
+    let defaultEditable = (() => {
+        if (!is.tag(node)) return false;
+        const self = project.components.find((c) =>
+            c.absolutePath.endsWith(`${node.name}.astro`),
+        );
+        if (!self) return false;
+        return self.acceptsChildren || textTags.includes(node.name);
+    })();
+
     function selectSelf() {
         selectedBlock = node.position;
     }
@@ -24,7 +38,7 @@
 
 {#if is.tag(node)}
     <div
-        style={`padding-left: ${depth === 0 ? "0" : "10"}px; border: 1px solid rgba(255, 255, 255, 0.2); padding: 8px; display: flex; flex-direction: column; gap: 8px;`}
+        style={`padding-left: ${depth === 0 ? "0" : "10"}px; border: 1px solid rgba(255, 255, 255, 0.1); padding: 16px 8px 16px 8px; display: flex; flex-direction: column; gap: 8px; background: ${depth % 2 === 0 ? "#282824" : "rgba(0, 0, 0, 0.2)"}`}
     >
         <button
             onclick={selectSelf}
@@ -49,7 +63,12 @@
 {/if}
 
 {#if is.text(node)}
-    <input bind:value={node.value} />
+    {#if defaultEditable || node.value.trim()}
+        <textarea
+            style="background: none; border: rgba(255, 255, 255, 0.1) 1px solid; color: inherit; font: inherit; padding: 8px; resize: vertical;"
+            bind:value={node.value}
+        ></textarea>
+    {/if}
 {/if}
 
 <style>

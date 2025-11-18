@@ -75,7 +75,7 @@
     <div>
         {#if selectedBlock}
             {#if is.tag(selectedBlock)}
-                {#each selectedBlock.attributes as attr}
+                {#each selectedBlock.attributes as attr, i}
                     <div>
                         {attr.name}: {attr.value}
                     </div>

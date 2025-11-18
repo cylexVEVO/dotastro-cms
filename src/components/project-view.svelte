@@ -3,7 +3,7 @@
     import EditorWrite from "./editor-write.svelte";
     import Navigator from "./navigator-root.svelte";
 
-    let mode: "monaco" | "write" = $state("monaco");
+    let mode: "monaco" | "write" = $state("write");
 </script>
 
 <div class="layout">
