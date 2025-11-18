@@ -1,6 +1,7 @@
 import { LazyStore } from "@tauri-apps/plugin-store";
 import { type FsNode } from "./types";
 import { writable } from "svelte/store";
+import type { getComponentMetadata } from "./parsing";
 
 type AppState = {
   currentPath: string;
@@ -9,6 +10,9 @@ type AppState = {
     path: string;
     // from package.json or path if unable to find
     name: string;
+    components: (Awaited<ReturnType<typeof getComponentMetadata>> & {
+      absolutePath: string;
+    })[];
   }[];
   activeProject: string | null;
 };

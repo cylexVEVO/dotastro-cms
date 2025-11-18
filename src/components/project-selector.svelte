@@ -1,7 +1,27 @@
 <script lang="ts">
-    import { getPackageName } from "$lib/parsing";
+    import { getComponentMetadata, getPackageName } from "$lib/parsing";
+    import { invoke } from "@tauri-apps/api/core";
     import { appState } from "../lib/state.svelte";
     import { open } from "@tauri-apps/plugin-dialog";
+    import type { FsNode } from "$lib/types";
+
+    function getComponentPaths(tree: FsNode) {
+        const src = tree.children.find(
+            (node) => node.name === "src" && !node.is_file,
+        );
+
+        if (!src) return [];
+
+        const components = src.children.find(
+            (node) => node.name === "components" && !node.is_file,
+        );
+
+        if (!components) return [];
+
+        return components.children
+            .filter((node) => node.is_file && node.name.endsWith(".astro"))
+            .map((node) => node.path);
+    }
 
     async function openProject() {
         const path = await open({
@@ -11,9 +31,39 @@
         if (!path) return;
 
         if (!$appState.projects.find((project) => project.path === path)) {
+            const tree = (await invoke("get_content_tree", {
+                path,
+            })) as FsNode | null;
+            if (!tree) return;
+
+            const componentPaths = getComponentPaths(tree);
+            const componentsSrc = await Promise.all(
+                componentPaths.map(async (path) => {
+                    const src = (await invoke("get_file_content", {
+                        path,
+                    })) as string;
+
+                    return {
+                        src,
+                        path,
+                    };
+                }),
+            );
+            const components = await Promise.all(
+                componentsSrc.map(async (component) => {
+                    const meta = await getComponentMetadata(component.src);
+
+                    return {
+                        ...meta,
+                        absolutePath: component.path,
+                    };
+                }),
+            );
+
             $appState.projects.push({
                 path,
                 name: await getPackageName(path),
+                components,
             });
         }
 

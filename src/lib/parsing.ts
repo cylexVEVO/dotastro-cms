@@ -3,6 +3,7 @@ import * as ts from "typescript";
 import { initialize, parse } from "./astro-compiler/browser";
 import { is, walkAsync } from "./astro-compiler/browser/utils";
 import { invoke } from "@tauri-apps/api/core";
+import type { ParseOptions, ParseResult } from "./astro-compiler/shared/types";
 
 function searchForSlot(node: TagLikeNode): boolean {
   if (node.name === "slot") return true;
@@ -18,6 +19,15 @@ function searchForSlot(node: TagLikeNode): boolean {
   return false;
 }
 
+export async function parseAstro(
+  src: string,
+  options?: ParseOptions,
+): Promise<ParseResult> {
+  await initialize({ wasmURL: "/astro.wasm" });
+
+  return parse(src, options);
+}
+
 export async function getComponentMetadata(src: string): Promise<{
   acceptsChildren: boolean;
   props: string[];
@@ -27,9 +37,7 @@ export async function getComponentMetadata(src: string): Promise<{
   let props: string[] = [];
   let components: string[] = [];
 
-  await initialize({ wasmURL: "/astro.wasm" });
-
-  const result = await parse(src, { position: false });
+  const result = await parseAstro(src, { position: false });
 
   await walkAsync(result.ast, async (node) => {
     // search for slot, skip if already found
@@ -95,8 +103,6 @@ export async function getPackageName(pkgPath: string) {
   const packageJson = (await invoke("get_file_content", {
     path: `${pkgPath}/package.json`,
   })) as string;
-
-  console.log(packageJson, `${pkgPath}/package.json`);
 
   // if empty string (e.g. couldn't find file) just use path
   if (!packageJson) return pkgPath;
