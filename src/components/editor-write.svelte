@@ -61,39 +61,43 @@
         }
     }
 
-    function addBlock(mode: AddBlockMode, component: string, self: Position) {
+    function addBlock(mode: AddBlockMode, component: string, self: Node) {
         if (!ast) return;
+        if (!Object.hasOwn(ast, "children")) ast["children"] = [];
 
-        let done = false;
+        let nodeToInsert: Node | null = null;
 
-        ast.children.map((child, i) => {
-            if (child.position!.start.offset === self.start.offset && !done) {
-                const insertIdx = mode === "above" ? i : i + 1;
-                importComponent(component);
-                ast!.children.splice(insertIdx, 0, {
-                    type: "component",
-                    attributes: [],
-                    children: [],
-                    name: component,
-                });
+        if (component === "#TextNode") {
+            nodeToInsert = {
+                type: "text",
+                value: "",
+            };
+        } else {
+            importComponent(component);
+            nodeToInsert = {
+                type: "component",
+                attributes: [],
+                children: [],
+                name: component,
+            };
+        }
 
-                done = true;
+        if (mode === "inside") {
+            if (!is.tag(self)) return;
 
-                return;
+            self.children.push(nodeToInsert);
 
-                // if (ast) {
-                //     invoke("save_file_content", {
-                //         path: $appState.currentPath,
-                //         content: astToString(ast),
-                //     });
-                // }
-            }
-        });
+            return;
+        }
+
+        const selfIdx = ast.children.indexOf(self);
+        const insertIdx = mode === "above" ? selfIdx : selfIdx + 1;
+
+        ast.children.splice(insertIdx, 0, nodeToInsert);
     }
 
     function addFirstBlock(component: string) {
         if (!ast) return;
-
         if (!Object.hasOwn(ast, "children")) ast["children"] = [];
 
         importComponent(component);

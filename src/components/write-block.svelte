@@ -23,11 +23,7 @@
         depth: number;
         selectedBlock: Position | null | undefined;
         deleteSelf: () => void;
-        addBlock: (
-            mode: AddBlockMode,
-            component: string,
-            self: Position,
-        ) => void;
+        addBlock: (mode: AddBlockMode, component: string, self: Node) => void;
         importComponent: (name: string) => void;
         isChildOfDefaultEditable: boolean;
     } = $props();
@@ -61,85 +57,39 @@
         dialog.showModal();
     }
 
-    function int_addBlock(
-        mode: AddBlockMode,
-        component: string,
-        self: Position,
-    ) {
+    function int_addBlock(mode: AddBlockMode, component: string, self: Node) {
         if (!parent) return;
         if (!is.tag(node)) return;
 
-        let done = false;
+        let nodeToInsert: Node | null = null;
+
+        if (component === "#TextNode") {
+            nodeToInsert = {
+                type: "text",
+                value: "",
+            };
+        } else {
+            importComponent(component);
+            nodeToInsert = {
+                type: "component",
+                attributes: [],
+                children: [],
+                name: component,
+            };
+        }
 
         if (mode === "inside") {
-            node.children.map((child, i) => {
-                if (
-                    child.position!.start.offset === self.start.offset &&
-                    !done
-                ) {
-                    if (!is.tag(child)) return;
+            if (!is.tag(self)) return;
 
-                    if (component === "#TextNode") {
-                        child.children.push({
-                            type: "text",
-                            value: "",
-                        });
-                    } else {
-                        importComponent(component);
-                        child.children.push({
-                            type: "component",
-                            attributes: [],
-                            children: [],
-                            name: component,
-                        });
-                    }
-
-                    done = true;
-
-                    return;
-
-                    // if (ast) {
-                    //     invoke("save_file_content", {
-                    //         path: $appState.currentPath,
-                    //         content: astToString(ast),
-                    //     });
-                    // }
-                }
-            });
+            self.children.push(nodeToInsert);
 
             return;
         }
 
-        node.children.map((child, i) => {
-            if (child.position!.start.offset === self.start.offset && !done) {
-                const insertIdx = mode === "above" ? i : i + 1;
-                if (component === "#TextNode") {
-                    node.children.splice(insertIdx, 0, {
-                        type: "text",
-                        value: "",
-                    });
-                } else {
-                    importComponent(component);
-                    node.children.splice(insertIdx, 0, {
-                        type: "component",
-                        attributes: [],
-                        children: [],
-                        name: component,
-                    });
-                }
+        const selfIdx = node.children.indexOf(self);
+        const insertIdx = mode === "above" ? selfIdx : selfIdx + 1;
 
-                done = true;
-
-                return;
-
-                // if (ast) {
-                //     invoke("save_file_content", {
-                //         path: $appState.currentPath,
-                //         content: astToString(ast),
-                //     });
-                // }
-            }
-        });
+        node.children.splice(insertIdx, 0, nodeToInsert);
     }
 </script>
 
@@ -155,15 +105,14 @@
         {#each project.components as component}
             <button
                 class="button"
-                onclick={() =>
-                    addBlock(addMode, component.componentName, node.position!)}
+                onclick={() => addBlock(addMode, component.componentName, node)}
             >
                 {component.componentName}
             </button>
         {/each}
         <button
             class="button"
-            onclick={() => addBlock(addMode, "#TextNode", node.position!)}
+            onclick={() => addBlock(addMode, "#TextNode", node)}
         >
             #TextNode
         </button>
