@@ -21,7 +21,7 @@
     }: {
         node: Node;
         depth: number;
-        selectedBlock: Position | null | undefined;
+        selectedBlock: Node | null;
         deleteSelf: () => void;
         addBlock: (mode: AddBlockMode, component: string, self: Node) => void;
         importComponent: (name: string) => void;
@@ -49,7 +49,7 @@
     let dialog: HTMLDialogElement;
 
     function selectSelf() {
-        selectedBlock = node.position;
+        selectedBlock = node;
     }
 
     function showAddModal(insertPosition: AddBlockMode) {

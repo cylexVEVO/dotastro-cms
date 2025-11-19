@@ -24,9 +24,7 @@
         $appState.projects.find((p) => p.path === $appState.activeProject)!,
     );
     let ast: RootNode | null = $state(null);
-    // position of the selected block
-    let selectedBlockPosition: Position | null = $state(null);
-    let selectedBlock: Node | null | undefined = $state(null);
+    let selectedBlock: Node | null = $state(null);
     let dialog: HTMLDialogElement;
 
     function handleKeydown(e: KeyboardEvent) {
@@ -125,10 +123,6 @@
             meta = metadata;
         });
     });
-
-    $effect(() => {
-        selectedBlock = traverseToBlock(ast, selectedBlockPosition);
-    });
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -159,7 +153,7 @@
             <WriteBlock
                 bind:node={ast!.children[i]}
                 depth={0}
-                bind:selectedBlock={selectedBlockPosition}
+                bind:selectedBlock
                 deleteSelf={() =>
                     (ast!.children = ast!.children.filter((c, j) => i !== j))}
                 {addBlock}
