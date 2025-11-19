@@ -195,6 +195,10 @@
                         >
                             x
                         </button>
+                        <select bind:value={selectedBlock.attributes[i].kind}>
+                            <option value="expression">raw</option>
+                            <option value="quoted">text</option>
+                        </select>
                         <textarea
                             style="background: none; border: rgba(255, 255, 255, 0.1) 1px solid; color: inherit; font: inherit; padding: 8px; resize: vertical; height: max-content;"
                             bind:value={selectedBlock.attributes[i].value}

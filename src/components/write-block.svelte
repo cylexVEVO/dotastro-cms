@@ -174,12 +174,6 @@
                     text-align: inherit; border: none; flex-grow: 1;"
                 >
                     #TextNode
-                    <!-- {#if node.attributes.length}
-                        <span style="opacity: .5; font-size: .8rem;"
-                            >{node.attributes.length}
-                            {node.attributes.length > 1 ? "attrs" : "attr"}</span
-                        >
-                    {/if} -->
                 </button>
                 <button class="button" onclick={() => deleteSelf()}>x</button>
                 <button class="button" onclick={() => showAddModal("above")}
@@ -188,9 +182,6 @@
                 <button class="button" onclick={() => showAddModal("below")}
                     >↓+</button
                 >
-                <!-- <button class="button" onclick={() => showAddModal("inside")}
-                    >→+</button
-                > -->
             </div>
             <textarea
                 style="background: none; border: rgba(255, 255, 255, 0.1) 1px solid; color: inherit; font: inherit; padding: 8px; resize: vertical;"
