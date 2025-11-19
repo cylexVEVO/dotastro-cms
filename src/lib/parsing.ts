@@ -9,6 +9,7 @@ import type {
   Position,
   RootNode,
   Node,
+  FrontmatterNode,
 } from "./astro-compiler/shared/types";
 
 function searchForSlot(node: TagLikeNode): boolean {
@@ -136,4 +137,84 @@ export function traverseToBlock(
   }
 
   return null;
+}
+
+// ai slop yet again
+function getRelativePath(from: string, to: string): string {
+  // Get directory of 'from' file
+  const fromDir = from.slice(0, from.lastIndexOf("/"));
+
+  const fromParts = fromDir.split("/").filter(Boolean);
+  const toParts = to.split("/").filter(Boolean);
+
+  // Find common prefix length
+  let commonLength = 0;
+  while (
+    commonLength < fromParts.length &&
+    commonLength < toParts.length &&
+    fromParts[commonLength] === toParts[commonLength]
+  ) {
+    commonLength++;
+  }
+
+  // Add ".." for each remaining directory in 'from'
+  const upDirs = new Array(fromParts.length - commonLength).fill("..");
+
+  // Add remaining path segments from 'to'
+  const downDirs = toParts.slice(commonLength);
+
+  const result = [...upDirs, ...downDirs].join("/");
+  return result || ".";
+}
+
+export function getFileName(path: string): string {
+  return path.slice(path.lastIndexOf("/") + 1);
+}
+
+export function stripExtension(fileName: string): string {
+  const dotIndex = fileName.lastIndexOf(".");
+  // If no dot found, or dot is at the start (hidden file like .gitignore), return as-is
+  return dotIndex <= 0 ? fileName : fileName.slice(0, dotIndex);
+}
+// end ai slop
+
+function generateComponentImportStatement(
+  importerPath: string,
+  importedPath: string,
+) {
+  const relativePath = getRelativePath(importerPath, importedPath);
+  const componentName = stripExtension(getFileName(importedPath));
+
+  return `import ${componentName} from "${relativePath}";`;
+}
+
+export function addComponentImportToAst(
+  ast: RootNode,
+  sourcePath: string,
+  componentPath: string,
+) {
+  const importStmt = generateComponentImportStatement(
+    sourcePath,
+    componentPath,
+  );
+
+  // check if a frontmatter exists, create one if it doesn't
+  let frontmatter: FrontmatterNode | null = null;
+
+  for (const child of ast.children) {
+    if (is.frontmatter(child)) frontmatter = child;
+  }
+
+  if (!frontmatter) {
+    ast.children.unshift({
+      type: "frontmatter",
+      value: importStmt,
+    });
+
+    return ast;
+  }
+
+  frontmatter.value = `${importStmt}\n${frontmatter.value}`;
+
+  return ast;
 }

@@ -2,6 +2,7 @@
     import { appState } from "../lib/state.svelte";
     import { invoke } from "@tauri-apps/api/core";
     import {
+        addComponentImportToAst,
         getComponentMetadata,
         parseAstro,
         traverseToBlock,
@@ -14,7 +15,8 @@
     import { is } from "$lib/astro-compiler/browser/utils";
     import WriteBlock from "./write-block.svelte";
     import { astToString } from "$lib/serialize";
-    import { TagLikeNode } from "@astrojs/compiler/types";
+    import { type TagLikeNode } from "@astrojs/compiler/types";
+    import type { AddBlockMode } from "$lib/types";
 
     let fileContent = $state("");
     let meta = $state({});
@@ -25,6 +27,7 @@
     // position of the selected block
     let selectedBlockPosition: Position | null = $state(null);
     let selectedBlock: Node | null | undefined = $state(null);
+    let dialog: HTMLDialogElement;
 
     function handleKeydown(e: KeyboardEvent) {
         // Check if Ctrl (or Cmd on Mac) + S is pressed
@@ -38,6 +41,68 @@
                 });
             }
         }
+    }
+
+    function importComponent(name: string) {
+        // TODO: proper types
+        if (!meta.importedComponents.includes(name)) {
+            ast = addComponentImportToAst(
+                ast!,
+                $appState.currentPath,
+                project.components.find((c) => c.componentName === name)!
+                    .absolutePath,
+            );
+            // if (ast) {
+            //     invoke("save_file_content", {
+            //         path: $appState.currentPath,
+            //         content: astToString(ast),
+            //     });
+            // }
+        }
+    }
+
+    function addBlock(mode: AddBlockMode, component: string, self: Position) {
+        if (!ast) return;
+
+        let done = false;
+
+        ast.children.map((child, i) => {
+            if (child.position!.start.offset === self.start.offset && !done) {
+                const insertIdx = mode === "above" ? i : i + 1;
+                importComponent(component);
+                ast!.children.splice(insertIdx, 0, {
+                    type: "component",
+                    attributes: [],
+                    children: [],
+                    name: component,
+                });
+
+                done = true;
+
+                return;
+
+                // if (ast) {
+                //     invoke("save_file_content", {
+                //         path: $appState.currentPath,
+                //         content: astToString(ast),
+                //     });
+                // }
+            }
+        });
+    }
+
+    function addFirstBlock(component: string) {
+        if (!ast) return;
+
+        if (!Object.hasOwn(ast, "children")) ast["children"] = [];
+
+        importComponent(component);
+        ast.children.push({
+            type: "component",
+            attributes: [],
+            children: [],
+            name: component,
+        });
     }
 
     $effect(() => {
@@ -63,6 +128,27 @@
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
+
+<dialog bind:this={dialog} closedby="any">
+    <form
+        method="dialog"
+        style="display: flex; width: 100%; justify-content: end;"
+    >
+        <button class="button">x</button>
+    </form>
+
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+        {#each project.components as component}
+            <button
+                class="button"
+                onclick={() => addFirstBlock(component.componentName)}
+            >
+                {component.componentName}
+            </button>
+        {/each}
+    </div>
+</dialog>
+
 <div id="monaco-root">
     <div>
         {#each ast?.children as child, i}
@@ -70,8 +156,16 @@
                 bind:node={ast!.children[i]}
                 depth={0}
                 bind:selectedBlock={selectedBlockPosition}
+                deleteSelf={() =>
+                    (ast!.children = ast!.children.filter((c, j) => i !== j))}
+                {addBlock}
+                {importComponent}
+                isChildOfDefaultEditable={false}
             />
         {/each}
+        {#if !ast?.children?.length}
+            <button onclick={() => dialog.showModal()}>add component</button>
+        {/if}
     </div>
     <div style="padding: 8px;">
         {#if selectedBlock}
@@ -80,10 +174,10 @@
                     (attr) => attr.name,
                 )}
                 {@const availableAttrs =
-                    project.components.find((c) =>
-                        c.absolutePath.endsWith(
-                            `${(selectedBlock as TagLikeNode).name}.astro`,
-                        ),
+                    project.components.find(
+                        (c) =>
+                            c.componentName ===
+                            (selectedBlock as TagLikeNode).name,
                     )?.props ?? []}
                 {@const remainingAttrs = availableAttrs.filter(
                     (attr) => !definedAttrs.includes(attr),

@@ -1,5 +1,10 @@
 <script lang="ts">
-    import { getComponentMetadata, getPackageName } from "$lib/parsing";
+    import {
+        getComponentMetadata,
+        getFileName,
+        getPackageName,
+        stripExtension,
+    } from "$lib/parsing";
     import { invoke } from "@tauri-apps/api/core";
     import { appState } from "../lib/state.svelte";
     import { open } from "@tauri-apps/plugin-dialog";
@@ -56,6 +61,9 @@
                     return {
                         ...meta,
                         absolutePath: component.path,
+                        componentName: stripExtension(
+                            getFileName(component.path),
+                        ),
                     };
                 }),
             );

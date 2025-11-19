@@ -12,6 +12,7 @@ type AppState = {
     name: string;
     components: (Awaited<ReturnType<typeof getComponentMetadata>> & {
       absolutePath: string;
+      componentName: string;
     })[];
   }[];
   activeProject: string | null;

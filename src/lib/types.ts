@@ -48,3 +48,5 @@ export const textTags = [
   "address",
   "div",
 ];
+
+export type AddBlockMode = "above" | "below" | "inside";
